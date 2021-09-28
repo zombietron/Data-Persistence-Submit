@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
@@ -17,6 +18,12 @@ public class MainManager : MonoBehaviour
     private int m_Points;
     
     private bool m_GameOver = false;
+
+    public Text playerName;
+    private int m_highScore;
+    public Text highScoreText;
+    public Text inputText;
+    public GameObject pNameInput; 
 
     
     // Start is called before the first frame update
@@ -36,6 +43,7 @@ public class MainManager : MonoBehaviour
                 brick.onDestroyed.AddListener(AddPoint);
             }
         }
+        LoadGameData();
     }
 
     private void Update()
@@ -72,5 +80,49 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+        if(m_Points > m_highScore)
+        {
+            pNameInput.SetActive(true);
+            m_highScore = m_Points;
+            
+        }
+    }
+
+    [System.Serializable]
+    public class SaveData
+    {
+        public string name;
+        public int highScore;
+    }
+
+    
+    public void SaveGameData()
+    {
+        SaveData d = new SaveData();
+        d.highScore = m_Points;
+        d.name = playerName.text;
+        string path = Application.persistentDataPath + "/SaveData.txt";
+        string dataToWrite = JsonUtility.ToJson(d);
+        File.WriteAllText(path, dataToWrite);
+    }
+
+    public void LoadGameData()
+    {
+        string path = Application.persistentDataPath + "/SaveData.txt";
+        if(File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            SaveData d = JsonUtility.FromJson<SaveData>(json);
+            m_highScore = d.highScore;
+            highScoreText.text = "Best Score: " + m_highScore + " " + d.name;
+
+        }
+
+    }
+
+    public void InputPlayerName()
+    {
+        playerName = inputText;
+        SaveGameData();
     }
 }
